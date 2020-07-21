@@ -1,20 +1,14 @@
 var express = require('express');
-var fs = require('fs');
 var app = express();
-var port = 6000;
 
-app.listen(port, function(){
-    console.log('Server Start, Port : ' + port);
+var port = process.env.PORT || 6000;
+
+app.use(express.static('public'));
+
+app.get('/', function(req, res) {
+    res.sendFile(__dirname+'/public/index.html');
 });
 
-app.get('/', function(req, res){
-    fs.readFile('index.html', function(error, data){
-        if(error){
-            console.log(error);
-        }
-        else{
-            res.writeHead(200, {'Content-Type' : 'text/html'});
-            res.end(data);
-        }
-    })
-})
+app.listen(port,function(){
+    console.log("Running at port "+port);
+});
