@@ -15,7 +15,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"> </script>
     <base href="/">
     <title>Tomato Call</title>
-      
+     <script src="script.js" defer></script>
      
   </head>
 
@@ -247,18 +247,10 @@
 
             async function start() {
               var timer = document.getElementById('timer');
-              const webcamElement = document.getElementById('myVideo');
               var seconds = 0;
               var minutes = 0;
               var audio = new Audio('alarm.mp3');
-              console.log("Loading coco SSD..")
-
-              // Load the model.
-              const model = await cocoSsd.load();
-              console.log("Successfully loaded model");
-              const webcam = await tf.data.webcam(webcamElement);
-              // Create an object from Tensorflow.js data API which could capture image
-              // from the web camera as Tensor.
+             
               settimer(minutes, seconds);
               function timerstart(){
                 seconds = 1;
@@ -289,21 +281,18 @@
                 if(minutes<10){
                     minutes = "0"+minutes;
                 }
-                if (seconds % 1==0){
-                    const img = await webcam.capture();
-                    const result = await model.detect(img);
-
-                    document.getElementById("console").innerText = `
-                      prediction: ${result[0].class}\n
-                      probability: ${result[0].score}
-                    `;
-                    img.dispose();
-
-                    await tf.nextFrame();
+                if(seconds % 5 == 0){
+                    if(document.querySelector('#enterBtn').innerHTML=="Leave"){
+                        inference();
+                    }
+                    else{
+                        return;
+                    }
                 }
                 if(seconds<10){
                     seconds = "0"+seconds;
                 }
+                
                 timer.innerHTML = minutes+":"+seconds;
               }
              function playAlarm(){
@@ -314,6 +303,7 @@
             }
               if (isConnected) {
                 isConnected = false;
+                 timerstop();
                 document.querySelector('#enterBtn').innerHTML = "Enter";
                 Object.keys(remonRoom).forEach(function(id){
                   if( id !== remon.getChannelId()){
@@ -324,7 +314,7 @@
                   }
                   delete remonRoom[id];
                 })
-                timerstop();
+                
                 remon.close()
               } else {
                 isConnected = true;
