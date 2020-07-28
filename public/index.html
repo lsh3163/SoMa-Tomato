@@ -9,6 +9,10 @@
     />
     <meta name="description" content="RemoteMonster live media service demo" />
     <meta name="author" content="Lee Seung Hyun" />
+     <!-- Load TensorFlow.js. This is required to use coco-ssd model. -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"> </script>
+    <!-- Load the coco-ssd model. -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"> </script>
     <base href="/">
     <title>Tomato Call</title>
       
@@ -52,9 +56,15 @@
               Enter 클릭시 뽀모도로에 의해 25분 타이머를 시작합니다. 
               Leave 클릭시 방을 떠납니다.
             </li>
-            
+            <li>
+              SSD Object Detection이 실시간으로 사물을 탐지합니다.  
+            </li>
+            <li>
+              우린 상상2상팀입니다. 
+            </li>
+            <h6 id="console"></h6>
             <br />
-
+             
             <!-- Content Row -->
             <div class="row">
 
@@ -86,6 +96,7 @@
                     <h6 class="m-0 font-weight-bold text-primary">
                       Local Video
                     </h6>
+                    
                   </div>
                   <!-- Card Body -->
                   <div class="card-body">
@@ -107,6 +118,7 @@
                       >
                         waiting
                       </h6>
+                      
                       <div class="col-lg-5">
                         <div class="mt-12 text-center">
                           <span class="mr-2">
@@ -235,9 +247,18 @@
 
             async function start() {
               var timer = document.getElementById('timer');
+              const webcamElement = document.getElementById('myVideo');
               var seconds = 0;
               var minutes = 0;
               var audio = new Audio('alarm.mp3');
+              console.log("Loading coco SSD..")
+
+              // Load the model.
+              const model = await cocoSsd.load();
+              console.log("Successfully loaded model");
+              const webcam = await tf.data.webcam(webcamElement);
+              // Create an object from Tensorflow.js data API which could capture image
+              // from the web camera as Tensor.
               settimer(minutes, seconds);
               function timerstart(){
                 seconds = 1;
@@ -260,13 +281,25 @@
                 minutes = 0;
                 settimer(minutes,seconds);
               }    
-              function settimer(minutes, seconds){
+              async function settimer(minutes, seconds){
                 if(minutes>=25){
                     playAlarm();
                     return;
                 }
                 if(minutes<10){
                     minutes = "0"+minutes;
+                }
+                if (seconds % 1==0){
+                    const img = await webcam.capture();
+                    const result = await model.detect(img);
+
+                    document.getElementById("console").innerText = `
+                      prediction: ${result[0].class}\n
+                      probability: ${result[0].score}
+                    `;
+                    img.dispose();
+
+                    await tf.nextFrame();
                 }
                 if(seconds<10){
                     seconds = "0"+seconds;
@@ -297,6 +330,7 @@
                 isConnected = true;
                 document.querySelector('#enterBtn').innerHTML = "Leave";
                 timerstart();
+                
                 remon = new Remon({ config, listener });
                 await remon.createRoom("remon")
                 let participants = await remon.fetchRooms("remon");
