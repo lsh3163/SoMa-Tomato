@@ -13,6 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"> </script>
     <!-- Load the coco-ssd model. -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"> </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
     <base href="/">
     <title>Tomato Call</title>
      <script src="script.js" defer></script>
@@ -53,22 +54,22 @@
             <!-- Page Heading -->
               <h3 class="text-center display-2" id="timer">How to use</h3>
             <li>
-              Enter 클릭시 뽀모도로에 의해 25분 타이머를 시작합니다. 
-              Leave 클릭시 방을 떠납니다.
+              Enter 클릭시 
             </li>
             <li>
-              SSD Object Detection이 실시간으로 사물을 탐지합니다.  
+              SSD Object Detection  
             </li>
             <li>
               우린 상상2상팀입니다. 
             </li>
             <h6 id="console"></h6>
+            <h6 id="facecnt"></h6>
             <br />
              
             <!-- Content Row -->
             <div class="row">
 
-              <div class="col-xl-4 col-lg-5">
+              <div class="col-xl-3 col-lg-5">
                 <div class="card shadow mb-4" style="max-width: 54rem;">
                   <!-- Card Header - Dropdown -->
                   <div
@@ -87,7 +88,8 @@
                   </div>
                 </div>
               </div>
-              <div class="col-xl-8 col-lg-7">
+                
+              <div class="col-xl-3 col-lg-7">
                 <div class="card shadow mb-4" style="max-width: 54rem;">
                   <!-- Card Header - Dropdown -->
                   <div
@@ -136,7 +138,24 @@
                   </div>
                 </div>
               </div>
-
+              <div class="col-xl-3 col-lg-5">
+                <div class="card shadow mb-4" style="max-width: 54rem;">
+                  <!-- Card Header - Dropdown -->
+                  <div
+                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
+                  >
+                    <h6 class="m-0 font-weight-bold text-primary">
+                      Graph Chart
+                    </h6>
+                  </div>
+                  <!-- Card Body -->
+                  <div class="card-body">
+                    <main class="text-center">
+                      <canvas id="myChart" width="400" height="400"></canvas>
+                    </main>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <!-- /.container-fluid -->
@@ -187,7 +206,7 @@
                             muted : true,
                             controls: true,
                             playsinline: true,
-                            style :"z-index:1;background: rgba(0, 0, 0, 0.5); width: 300px;"
+                            style :"z-index:1;background: rgba(0, 0, 0, 0.5); width: 240px;"
                           }
 
             const listener = {
@@ -250,9 +269,8 @@
               var seconds = 0;
               var minutes = 0;
               var audio = new Audio('alarm.mp3');
-             
               settimer(minutes, seconds);
-              function timerstart(){
+              async function timerstart(){
                 seconds = 1;
             
                 contador = window.setInterval(function(){
@@ -260,13 +278,14 @@
                         settimer(minutes, seconds);
                         seconds = 0;
                         minutes++;
+                        inference();
                         return;
                     }
                     settimer(minutes, seconds);
                     seconds++;
                 },1000)
               }
-              function timerstop(){
+              async function timerstop(){
                 stopAlarm();
                 window.clearInterval(contador);
                 seconds = 0;
@@ -281,30 +300,22 @@
                 if(minutes<10){
                     minutes = "0"+minutes;
                 }
-                if(seconds % 5 == 0){
-                    if(document.querySelector('#enterBtn').innerHTML=="Leave"){
-                        inference();
-                    }
-                    else{
-                        return;
-                    }
-                }
                 if(seconds<10){
                     seconds = "0"+seconds;
                 }
                 
                 timer.innerHTML = minutes+":"+seconds;
               }
-             function playAlarm(){
+             async function playAlarm(){
                 audio.play();
              }
-            function stopAlarm(){
+             async function stopAlarm(){
                 audio.pause();
-            }
+             }
               if (isConnected) {
                 isConnected = false;
-                 timerstop();
                 document.querySelector('#enterBtn').innerHTML = "Enter";
+                timerstop();
                 Object.keys(remonRoom).forEach(function(id){
                   if( id !== remon.getChannelId()){
                     let video = document.getElementById(id.replace(":","-"));
